@@ -6,6 +6,7 @@ module OmniAuth
   module Strategies
 
     class Nuxeo < OmniAuth::Strategies::OAuth2
+
       option :name, "nuxeo"
 
       CLIENT_OPTIONS = [
@@ -41,6 +42,8 @@ module OmniAuth
         @options.client_id = args[0][:client_id] || "ABCDEFG"
         @options.client_secret = args[0][:client_secret] || "1234567890"
         @options.client_options.site = args[0][:site] || "https://tester.nuxeo.org"
+        @options.client_options.authorize_url = "#{args[0][:site]}/nuxeo/oauth2/authorize"
+        @options.client_options.token_url = "#{args[0][:site]}/token"
       end
 
       uid { raw_info["code"] }
@@ -62,39 +65,6 @@ module OmniAuth
         @raw_info ||= access_token.get("/me").parsed
       end
 
-      def authorize_url
-        "#{root_url}/nuxeo/oauth2/authorize"
-      end
-
-      def token_url
-        "#{root_url}/token"
-      end
-
-      def request_phase
-        p "REDIRECT URI: #{callback_url.inspect}"
-        p "AUTH PARAMS: #{authorize_params}"
-        p "URL: #{client.auth_code.authorize_url({:redirect_uri => callback_url}.merge(authorize_params))}"
-        super
-      end
-
-      def callback_phase
-        p "ERRORS: #{request.params["error_reason"] || request.params["error"]}"
-        super
-      end
-
-=begin
-      def authorize_params
-        super.tap do |params|
-          params[:response_type] = "code"
-
-          AUTHORIZATION_OPTIONS.each do |opt|
-            params[opt] = request.params[opt] if request.params[opt].present?
-          end
-
-          session['omniauth.state'] = params[:state] if params['state']
-        end
-      end
-=end
     end
 
   end
