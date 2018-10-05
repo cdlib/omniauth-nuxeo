@@ -30,6 +30,10 @@ module OmniAuth
       option :authorization_options, AUTHORIZATION_OPTIONS
       option :token_options, TOKEN_OPTIONS
 
+      # Bypass CSRF errors
+      # We should remove this and solve the issue properly if going live
+      option :provider_ignores_state, true
+
       args [:client_id, :client_secret]
 
       def initialize(app, *args, &block)
@@ -64,6 +68,18 @@ module OmniAuth
 
       def token_url
         "#{root_url}/token"
+      end
+
+      def request_phase
+        p "REDIRECT URI: #{callback_url.inspect}"
+        p "AUTH PARAMS: #{authorize_params}"
+        p "URL: #{client.auth_code.authorize_url({:redirect_uri => callback_url}.merge(authorize_params))}"
+        super
+      end
+
+      def callback_phase
+        p "ERRORS: #{request.params["error_reason"] || request.params["error"]}"
+        super
       end
 
 =begin
