@@ -68,20 +68,24 @@ module OmniAuth
       def authorize_params
         super.tap do |params|
           params[:client_secret] = @options.client_secret
-          #params[:code_challenge_method] = @options.client_options.code_challenge_method
-          #params[:code_challenge] = @options.client_options.code_challenge
+          session['omniauth.state'] = params[:state] if params['state']
         end
       end
 
       def token_params
         super.tap do |params|
-p "TOKEN CHECK #{ @env['omniauth.params'].inspect }"
+          params[:grant_type] = "authorization_code"
+          params[:client_id] = @options.client_id
         end
       end
 
-      def callback_phase
-        request.params["grant_type"] = "authorization_code"
-        request.params["client_id"] = @options.client_id
+      protected
+
+      def build_access_token
+p "VERIFIER: #{request.params["code"]}"
+p "REDIRECT_URI: #{callback_url}"
+p token_params.to_hash(symbolize_keys: true).inspect
+        super
       end
 
       private
